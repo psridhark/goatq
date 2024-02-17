@@ -1,0 +1,211 @@
+syntax = "proto3";
+option go_package = "github.com/psridhark/goatq/grpc";
+
+service GoatQ {
+
+  // Produce writes a message to a goatq topic.
+  rpc ProduceMessage (ProduceRequest) returns (ProduceResponse) {}
+
+  // Batch Produce writes a message to a goatq topic.
+  rpc ProduceMessageBatch (ProduceBatchRequest) returns (ProduceBatchResponse) {}
+
+  // Consume reads a message from a topic and optionally acknowledges a
+  rpc ConsumeMessage (ConsumeRequest) returns (ConsumeResponse) {}
+
+  // Produce writes a message to a goatq topic.
+  rpc ProducePartitionMessage (ProducePartRequest) returns (ProducePartResponse) {}
+
+  // Produce writes a message to a goatq topic.
+  rpc ProducePartitionMessageBatch (ProduceBatchRequest) returns (ProduceBatchResponse) {}
+
+  // Consume reads a message from a topic and optionally acknowledges a
+  rpc ConsumePartitionMessage (ConsumePartRequest) returns (ConsumePartResponse) {}
+
+  // Streams Consume reads a message from a topic and streams
+  rpc ConsumePartitionMessageStream (ConsumePartRequest) returns (stream ConsumePartResponse) {}
+
+
+  rpc CreateTopic (TopicRequest) returns (TopicResponse) {}
+
+  rpc DeleteTopic (TopicRequest) returns (TopicResponse) {}
+
+  // Lists all topics and metadata with optional metadata for the partitions of the topic
+  rpc ListTopics (ListTopicRequest) returns (ListTopicResponse) {}
+
+  // Fetches topic metadata and optional metadata for the partitions of the topic
+  rpc GetTopicMetadata (GetTopicMetadataRequest) returns (GetTopicMetadataResponse) {}
+}
+
+message DataRecordBatch {
+  // Record the message to be written
+  bytes key = 1;
+
+  bytes val = 2;
+
+  uint64 timestamp = 3;
+
+  bytes header = 4;
+
+  uint64 offset = 5;
+
+}
+
+message DataRecord {
+  // Record the message to be written
+  bytes key = 1;
+
+  bytes val = 2;
+
+  uint64 timestamp = 3;
+
+  bytes header = 4;
+
+  uint64 offset = 5;
+
+}
+
+message TopicRequest {
+  string topic = 1;
+
+  int32 numPartitions = 2;
+
+  int32 replFactor = 3;
+
+  map<string, string> config = 4;
+
+}
+
+message TopicResponse {}
+
+
+message ProduceRequest {
+  // Name of a topic to produce to.
+  string topic = 1;
+  int32 partition = 2;
+  // The record that needs to be added.
+  DataRecord record = 3;
+
+}
+
+message ProduceResponse {
+  // Partition the message was written to. The value only makes sense if
+  // ProdReq.async_mode was false.
+  int32 partition = 1;
+
+  // Offset the message was written to. The value only makes sense if
+  // ProdReq.async_mode was false.
+  int64 offset = 2;
+}
+
+message ProduceBatchRequest {
+  // Name of a topic to produce to.
+  string topic = 1;
+
+  int32 partition = 2;
+  // The records that needs to be added
+  repeated DataRecord records = 3;
+
+}
+
+message ProduceBatchResponse {
+  // Partition the message was written to. The value only makes sense if
+  // ProdReq.async_mode was false.
+  int32 partition = 1;
+
+  // Offset the message was written to. The value only makes sense if
+  // ProdReq.async_mode was false.
+  int64 offset = 2;
+}
+
+
+message ConsumeRequest {
+  // Name of a topic to produce to.
+  string topic = 1;
+
+  int64 offset = 2;
+
+  int64 limit = 3;
+}
+
+message ConsumeResponse {
+  // Partition the message was read from.
+  repeated DataRecord records = 1;
+}
+
+
+message ProducePartRequest {
+  // Name of a topic to produce to.
+  string topic = 1;
+
+  int32 partition = 2;
+
+  DataRecord record = 3;
+
+}
+
+message ProducePartResponse {
+  // Partition the message was written to. The value only makes sense if
+  // ProdReq.async_mode was false.
+  int32 partition = 1;
+
+  // Offset the message was written to. The value only makes sense if
+  // ProdReq.async_mode was false.
+  int64 offset = 2;
+}
+
+message ConsumePartRequest {
+  // Name of a topic to produce to.
+  string topic = 1;
+
+  int32 partition = 2;
+
+  int64 offset = 3;
+
+  int64 limit = 4;
+}
+
+message ConsumePartResponse {
+  // Partition the message was read from.
+  repeated DataRecord records = 1;
+}
+
+
+// Partition metadata as retrieved from goatq
+message PartitionMetadata {
+  // The Partition this structure describes
+  int32 partition = 1;
+
+  // The node id for the goatq broker currently acting as leader for this partition.
+  // If no leader exists because we are in the middle of a leader election this id will be -1.
+  int32 leader = 2;
+
+  // The set of alive nodes that currently acts as slaves for the leader for this partition.
+  repeated int32 replicas = 3;
+
+}
+
+message GetTopicMetadataRequest {
+  // Name of a topic
+  string topic = 1;
+
+  // Should include partition metadata
+  bool with_partitions = 2;
+}
+
+message GetTopicMetadataResponse {
+  // Config values
+  map<string, string> config = 1;
+
+  // Optional list of metadata for the partitions of this topic
+  repeated PartitionMetadata partitions = 2;
+}
+
+message ListTopicResponse {
+  map<string, GetTopicMetadataResponse> topics = 1;
+}
+
+message ListTopicRequest {
+  // Should include partition metadata
+  bool with_partitions = 1;
+}
+

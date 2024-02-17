@@ -1,0 +1,1 @@
+~/go/bin/goatq broker --data-dir=/tmp/goatq3 --raft-dir=/tmp/goatq3 --broker-addr=127.0.0.1:9301 --raft-addr=127.0.0.1:9302 --serf-addr=127.0.0.1:9303 --grpc-addr=127.0.0.1:9304 --http-addr=127.0.0.1:9305 --db-raft-addr=127.0.0.1:64003 --bootstrap-expect=3 --id=3 --join=127.0.0.1:9103
